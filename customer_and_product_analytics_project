@@ -1,3 +1,5 @@
+-- In this project, I queried multiple tables containing customer data as well as monthly sales data. The data also needed to be filtered because of some unclean records.
+
 -- How many orders were placed in January?
 SELECT COUNT(orderid) 
 FROM BIT_DB.JanSales
