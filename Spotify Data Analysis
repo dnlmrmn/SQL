@@ -60,3 +60,28 @@ FROM Spotifydata
 WHERE speechiness > (SELECT AVG(speechiness) FROM Spotifydata)
 AND popularity > (SELECT AVG(popularity) FROM Spotifydata)
 ;
+
+-- show the average song key that's associated with the most popular songs
+select
+round(avg(song_key), 2) as avg_key
+from Spotifydata
+group by popularity
+order by popularity desc
+limit 1;
+
+-- show the average popularity of tracks that feature other artists
+select round(avg(popularity), 2) as avg_popularity
+from Spotifydata
+where track_name like '%(feat.%'
+or track_name like '%(with%'
+;
+
+-- show each artist's total number of tracks and total duration_ms
+select distinct
+artist_name,
+count(id) as total_songs,
+sum(duration_ms) as total_duration
+from Spotifydata
+group by artist_name
+order by total_duration desc
+;
