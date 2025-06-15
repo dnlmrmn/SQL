@@ -1,112 +1,162 @@
 # From music sales database, which can be found here: https://cdn.fs.teachablecdn.com/dRmwOLQsS22FVFbXfh3x
 
--- Show Customers (their full names, customer ID, and country) who are not in the US.
-SELECT CustomerID,
-FirstName,
-LastName,
-Country
-FROM customers
-WHERE Country <> 'USA';
+-- Show Customers (their full names, customer ID, and country) who are not in the US. (Hint: != or <> can be used to say "is not equal to").
+select
+c.FirstName
+, c.LastName
+, c.CustomerID
+, c.Country
+from chinook.customers c
+where c.Country <> 'USA'
+;
 
 -- Show only the Customers from Brazil.
-SELECT CustomerID,
-FirstName,
-LastName,
-Country
-FROM customers
-WHERE Country='Brazil';
+select
+c.FirstName
+, c.LastName
+from chinook.customers c
+where c.Country like '%brazil%'
+;
 
 -- Find the Invoices of customers who are from Brazil. The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
-SELECT InvoiceID,
-CONCAT(FirstName, " ", LastName) as FullName,
-InvoiceDate,
-BillingCountry
-FROM invoices
-LEFT JOIN customers ON invoices.CustomerID=customers.CustomerID
-WHERE Country='Brazil';
+select
+c.FirstName
+, c.LastName
+, i.InvoiceID
+, i.InvoiceDate
+, i.BillingCountry
+from chinook.invoices i
+join chinook.customers c
+on i.CustomerID = c.CustomerID
+where c.Country like '%brazil%'
+;
 
 -- Show the Employees who are Sales Agents.
-SELECT *
-FROM employees
-WHERE Title = 'Sales Support Agent';
+select
+e.FirstName
+, e.LastName
+, e.Title
+from chinook.employees e
+where e.Title like '%agent%'
+;
 
 -- Find a unique/distinct list of billing countries from the Invoice table.
-SELECT DISTINCT BillingCountry
-FROM invoices;
+select distinct
+i.BillingCountry
+from chinook.invoices i
+;
 
 -- Provide a query that shows the invoices associated with each sales agent. The resulting table should include the Sales Agent's full name.
-SELECT emp.LastName, 
-emp.Firstname, 
-inv.InvoiceId
-FROM chinook.Employees emp 
-JOIN chinook.Customers cust ON cust.SupportRepId = emp.EmployeeId
-JOIN chinook.Invoices Inv ON Inv.CustomerId = cust.CustomerId;
+select
+i.InvoiceID
+, e.FirstName
+, e.LastName
+from chinook.invoices i
+join chinook.customers c
+on i.CustomerID = c.CustomerID
+join chinook.employees e
+on c.SupportRepID = e.EmployeeID
+where e.Title like '%agent%'
+;
 
 -- Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
-SELECT 
-inv.InvoiceID,
-inv.Total,
-CONCAT(cust.FirstName, ' ', cust.LastName) as CustName,
-cust.Country,
-CONCAT(emp.FirstName, ' ', emp.LastName) as EmpName
-FROM invoices inv
-JOIN customers cust on inv.CustomerId = cust.CustomerId
-JOIN employees emp on cust.SupportRepId = emp.EmployeeId;
+select
+i.Total
+, c.LastName as CustomerLName
+, c.FirstName as CustomerFName
+, c.Country
+, e.LastName as AgentLName
+, e.FirstName as AgentFName
+from chinook.invoices i
+full join chinook.customers c
+on i.CustomerID = c.CustomerID
+join chinook.employees e
+on c.SupportRepID = e.EmployeeID
+;
 
 -- How many Invoices were there in 2009?
-SELECT COUNT(InvoiceID)
-FROM invoices
-WHERE InvoiceDate BETWEEN '2009-01-01' AND '2009-12-31';
+select 
+count(i.InvoiceID) as '2009_Invoices'
+from chinook.invoices i
+where i.InvoiceDate between '2009-01-01' and '2009-12-31'
+;
 
 -- What are the total sales for 2009?
-SELECT SUM(Total)
-FROM invoices
-WHERE InvoiceDate BETWEEN '2009-01-01' AND '2009-12-31';
+select 
+sum(i.Total)
+from chinook.invoices i
+where i.InvoiceDate between '2009-01-01' and '2009-12-31'
+;
 
 -- Write a query that includes the purchased track name with each invoice line ID.
-SELECT invoice_items.InvoiceLineId, tracks.Name
-FROM invoice_items
-JOIN tracks ON invoice_items.TrackId = tracks.TrackId;
+select
+t.Name
+, i.InvoiceLineID
+from chinook.invoice_items i
+left join chinook.tracks t
+on i.TrackID = t.TrackID
+;
 
 -- Write a query that includes the purchased track name AND artist name with each invoice line ID.
-SELECT i.InvoiceLineId, 
-a.Name as Artist, 
-t.Name as Track
-FROM invoice_items i
-JOIN tracks t ON i.TrackId = t.TrackId
-JOIN albums al ON t.AlbumId = al.AlbumId
-JOIN artists a ON al.ArtistId = a.ArtistId;
+select
+t.Name as trackName
+, a.Name as artistName
+, i.InvoiceLineID
+from chinook.invoice_items i
+left join chinook.tracks t
+on i.TrackID = t.TrackID
+join chinook.albums al
+on t.AlbumID = al.AlbumID
+join chinook.artists a
+on al.ArtistID = a.ArtistID
+;
 
 -- Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
-SELECT
-t.Name as Track,
-al.Title as AlbumTitle,
-m.Name as MediaType,
-g.Name as Genre
-FROM tracks t
-LEFT JOIN albums al ON t.AlbumId = al.AlbumId
-JOIN media_types m ON t.MediaTypeId = m.MediaTypeId
-JOIN genres g ON t.GenreId = g.GenreId;
+select
+t.Name as trackName
+, al.Title as albumTitle
+, m.Name as mediaType
+, g.Name as genreName
+from chinook.tracks t
+left join chinook.albums al
+on t.AlbumID = al.AlbumID
+left join chinook.media_types m
+on t.MediaTypeID = m.MediaTypeID
+left join chinook.genres g
+on t.GenreID = g.GenreID
+;
 
 -- Show the total sales made by each sales agent.
-SELECT 
-CONCAT(e.LastName, ', ', e.FirstName) as RepName, 
-ROUND(SUM(i.Total), 2) as TotalSales
-FROM employees e
-JOIN customers c ON e.EmployeeId = c.SupportRepId
-JOIN invoices i ON c.CustomerId = i.CustomerId
-WHERE Title='Sales Support Agent'
-GROUP BY RepName;
+select
+e.EmployeeID
+, e.FirstName
+, e.LastName
+, e.Title
+, sum(i.Total) as totalSales
+from chinook.employees e
+join chinook.customers c
+on e.EmployeeID = c.SupportRepID
+join chinook.invoices i
+on c.CustomerID = i.CustomerID
+where e.Title like '%agent%'
+group by e.EmployeeID
+;
 
 -- Which sales agent made the most dollars in sales in 2009?
-SELECT 
-CONCAT(e.LastName, ', ', e.FirstName) as RepName, 
-ROUND(SUM(i.Total), 2) as TotalSales
-FROM employees e
-JOIN customers c ON e.EmployeeId = c.SupportRepId
-JOIN invoices i ON c.CustomerId = i.CustomerId
-WHERE e.Title='Sales Support Agent'
-AND i.InvoiceDate BETWEEN '2009-01-01' and '2009-12-31'
-GROUP BY RepName
-ORDER BY TotalSales DESC
-LIMIT 1;
+select
+e.EmployeeID
+, e.FirstName
+, e.LastName
+, e.Title
+, sum(i.Total) as totalSales
+from chinook.employees e
+join chinook.customers c
+on e.EmployeeID = c.SupportRepID
+join chinook.invoices i
+on c.CustomerID = i.CustomerID
+where e.Title like '%agent%'
+and i.InvoiceDate between '2009-01-01' and '2009-12-31'
+group by e.EmployeeID
+order by totalSales desc
+limit 1
+;
